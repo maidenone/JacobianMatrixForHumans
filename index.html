@@ -1,0 +1,190 @@
+<html>
+<meta http-equiv="refresh" content="3" >
+<script src="https://threejs.org/build/three.js"></script>
+
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+<script>
+MathJax = {
+    tex: {
+      tags: 'all'
+    }
+  };
+
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  }
+};
+
+</script>
+
+<style>
+body { margin: 0; }
+canvas { width: 100%; height: 100% }
+#text 
+{ 
+	position: absolute;
+	color: white; 
+	font-size:20;
+	top:20px;
+	left:20px;
+}
+
+#jacob
+{
+	color: white;
+	font-size:20;
+}
+#formulas
+{
+	position: absolute;
+	color: green;
+	font-size:20;
+	top:20;
+	right:20;
+}
+
+
+</style>
+<body>
+	<div id="text">
+		Jackobian matrices for humans<br>
+	<table id="jacob">
+		<tr>
+			<td>&theta;0</td><td></td>
+		</tr>
+		<tr>
+			<td>&theta;1</td><td></td>
+		</tr>
+		<tr>
+			<td>&theta;2</td><td></td>
+		</tr>
+		<tr>
+			<td>&theta;3</td><td></td>
+		</tr>
+		
+	</table>
+	</div>
+	<div id="formulas">
+		Linear Velocity of point 1 (V)<br>
+		$$V = &omega; \times r $$ 
+		Rotational Velocity of point 1 (&omega;)<br>
+		$$&omega; = \dot{&theta;}$$
+
+		$$&#983; = \begin{bmatrix} V^o_n   \\ &omega;^o_n \end{bmatrix} = \begin{bmatrix} \dot{X}^o_n \\ \dot{Y}^o_n \\ \dot{Z}^o_n \\ \dot{&omega;_z}^o_n \\ \dot{&omega;_y}^o_n \\ \dot{&omega;_z}^o_n  \end{bmatrix}$$
+		
+		$ \dot{q} = $ displacement of joint
+		$$ \dot{q} = \begin{bmatrix} \dot{&theta;_1} \\ \dot{&theta;_2} \\ \dot{&theta;_3} \\ \end{bmatrix} $$
+		$$&#983; = J \dot{q}$$
+	</div>
+</body>
+<script>
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
+
+var geometry = new THREE.BoxGeometry( 0.5, 2, 0.5 );
+var geometryC = new THREE.CylinderGeometry( 0.25, 0.25, 0.6, 32 );
+var material = new THREE.MeshBasicMaterial( { color: 0x00ff00} );
+var material2 = new THREE.MeshBasicMaterial( { color: 0xffff00} );
+var cube = new THREE.Mesh( geometry, material );
+var cylinder = new THREE.Mesh( geometryC, material2 );
+
+cylinder.position.x = 0;
+cylinder.rotation.x = Math.PI /2;
+camera.position.z = 5;
+camera.position.x = 2;
+camera.rotation.y = Math.PI/8;
+camera.lookAt(0,0,0);
+//Make a pivot
+var upperLeg = new THREE.Object3D();
+
+var materialRed = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+var materialBlue = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+
+var points = [];
+points.push( new THREE.Vector3( 0, 0, 0 ) );
+points.push( new THREE.Vector3( 0, 1, 0 ) );
+points.push( new THREE.Vector3( 0.1, 0.9, 0 ) );
+points.push( new THREE.Vector3( -0.1, 0.9, 0 ) );
+points.push( new THREE.Vector3( 0, 1, 0 ) );
+
+var geometry = new THREE.BufferGeometry().setFromPoints( points );
+
+var lineY = new THREE.Line( geometry, materialRed );
+//scene.add(lineY);
+lineY.position.z = 0;
+lineY.material.linewidth=2;
+lineX = lineY.clone()
+lineX.rotation.z = -Math.PI / 2;
+//scene.add(lineX);
+
+var origoGroup = new THREE.Object3D();
+origoGroup.add(lineX);
+origoGroup.add(lineY);
+
+scene.add(origoGroup.clone());
+origoGroup.position.y = 2;
+upperLeg.add(origoGroup);
+
+//Add object to pivot
+upperLeg.add(cube);
+upperLeg.add(cylinder)
+
+foot = cube.clone();
+ancle = cylinder.clone();
+
+//Move object away from pivot
+cube.position.y = 1;
+foot.rotation.z += Math.PI/2;
+var footOrigo = origoGroup.clone();
+footOrigo.position.y = 0;
+foot.add(footOrigo);
+scene.add(upperLeg);
+
+var leg = upperLeg.clone();
+upperLeg.add(leg)
+leg.position.y = 2;
+
+leg.add(foot);
+leg.add(ancle);
+ancle.position.y = 2
+foot.position.y = 2
+
+function updateTable(){
+  var table = document.getElementById("jacob"),
+      tr = table.getElementsByTagName('tr')[0],
+      td = tr.getElementsByTagName('td')[1];
+      td.innerHTML = origoGroup.rotation.z.toFixed(3);		
+      tr = table.getElementsByTagName('tr')[1],
+      td = tr.getElementsByTagName('td')[1];
+      td.innerHTML = upperLeg.rotation.z.toFixed(3);
+      tr = table.getElementsByTagName('tr')[2],
+      td = tr.getElementsByTagName('td')[1];
+      td.innerHTML = leg.rotation.z.toFixed(3);
+      tr = table.getElementsByTagName('tr')[3],
+      td = tr.getElementsByTagName('td')[1];
+      td.innerHTML = foot.rotation.z.toFixed(3);
+
+
+}
+
+var animate = function () {
+  requestAnimationFrame( animate );
+  upperLeg.rotation.z += 0.01;
+  leg.rotation.z += 0.01;
+  foot.rotation.z += 0.005;
+  renderer.render( scene, camera );
+  updateTable();
+};
+
+animate();
+</script>
+</html>
